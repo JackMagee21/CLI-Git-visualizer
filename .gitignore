@@ -1,0 +1,4 @@
+gitviz.egg-info/
+gitviz/__pycache__/
+gitviz/gitviz.egg-info/
+.gitignore
