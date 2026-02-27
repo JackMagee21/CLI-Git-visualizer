@@ -1,0 +1,3 @@
+gitpython
+click
+rich

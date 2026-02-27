@@ -1,0 +1,9 @@
+pyproject.toml
+core/commits.py
+core/repo.py
+gitviz.egg-info/PKG-INFO
+gitviz.egg-info/SOURCES.txt
+gitviz.egg-info/dependency_links.txt
+gitviz.egg-info/entry_points.txt
+gitviz.egg-info/requires.txt
+gitviz.egg-info/top_level.txt
