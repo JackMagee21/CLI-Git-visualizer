@@ -1,10 +1,14 @@
 import click
 from rich.console import Console
 from rich.table import Table
+from rich.panel import Panel
+from rich.columns import Columns
+from rich import box
 
 from gitviz.core.repo import open_repo, RepoError
 from gitviz.core.commits import get_commits
 from gitviz.analytics.contributors import get_contributor_stats, contribution_percentage
+from gitviz.analytics.stats import get_repo_stats
 
 console = Console()
 
@@ -101,3 +105,43 @@ def contributors(path, limit):
 
     console.print(table)
     console.print(f"[dim]Analysed {len(commits)} commits across {len(stats)} contributor(s).[/dim]")
+
+
+@main.command()
+@click.argument("path", default=".")
+@click.option("--limit", "-n", default=500, help="Number of commits to analyse.")
+def stats(path, limit):
+    """Show a high-level summary of repository health."""
+    try:
+        repo = open_repo(path)
+    except RepoError as e:
+        console.print(f"[red]Error:[/red] {e}")
+        raise SystemExit(1)
+
+    commits = get_commits(repo, max_count=limit)
+
+    if not commits:
+        console.print("[yellow]No commits found.[/yellow]")
+        return
+
+    s = get_repo_stats(commits)
+
+    # build stat panels
+    panels = [
+        Panel(f"[cyan]{s.total_commits}[/cyan]",        title="Commits",          expand=True),
+        Panel(f"[cyan]{s.total_authors}[/cyan]",         title="Authors",          expand=True),
+        Panel(f"[green]+{s.total_insertions}[/green]",   title="Insertions",       expand=True),
+        Panel(f"[red]-{s.total_deletions}[/red]",        title="Deletions",        expand=True),
+        Panel(f"[yellow]{s.most_active_day}[/yellow]",   title="Most Active Day",  expand=True),
+        Panel(f"[yellow]{s.most_active_author}[/yellow]",title="Top Author",       expand=True),
+        Panel(f"[cyan]{s.avg_commits_per_day}[/cyan]",   title="Commits/Day",      expand=True),
+        Panel(f"[dim]{s.first_commit.strftime('%Y-%m-%d')}[/dim]", title="First Commit", expand=True),
+        Panel(f"[dim]{s.latest_commit.strftime('%Y-%m-%d')}[/dim]", title="Latest Commit", expand=True),
+    ]
+
+    console.print()
+    console.print(f"[bold]Repository Stats — {repo.working_dir}[/bold]")
+    console.print()
+    console.print(Columns(panels))
+    console.print()
+    console.print(f"[dim]Based on the last {len(commits)} commits.[/dim]")
